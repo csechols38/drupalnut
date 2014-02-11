@@ -1,0 +1,6 @@
+name = Example Hooks
+description = Module for Creating example hooks
+core = 7.x
+package = custom
+files[] = d_hooks.module
+core = "7.x"

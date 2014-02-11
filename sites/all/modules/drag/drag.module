@@ -1,0 +1,186 @@
+<?php
+
+
+/**
+ * @implements hook_menu();
+ */
+function drag_menu(){
+	$items = array();
+	//block menu item
+	$items['drag/ajax/block/%/%/%/%/%'] = array(
+		'page callback' => '_drag_load_render_block',
+		'page arguments' => array(3, 4, 5, 6, 7),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	//block update menu item
+	$items['drag/ajax/update/%/%'] = array(
+		'page callback' => '_drag_update_dragged_block',
+		'page arguments' => array(3, 4),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	//drag module config menu item
+	$items['admin/config/drag_config'] = array(
+		'title' => 'Drag Module Configuration',
+		'description' => 'Drag Module Configuration Settings',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('_drag_module_config'),
+		'access arguments' => array('access drag_module configs'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'drag.admin.inc',
+	);
+	return $items;
+}
+
+
+
+//hook_permissions
+function drag_permission() {
+  return array(
+    'drag_blocks' => array(
+      'title' => t('Drag Blocks'),
+      'description' => t('Allow user to repostion blocks with the Drag module.'),
+    ),
+  );
+}
+
+
+
+
+
+//ajax callback to renturn the desired block
+function _drag_load_render_block($ajax = TRUE, $delta = NULL, $module = NULL, $bid = NULL, $weight = NULL){
+	switch($ajax){
+	case 'ajax':
+		$block = module_invoke($module, 'block_view', $delta);
+		$render_block = render($block['content']);
+		$html = '<div class="replace-with-drag-block"></div>';
+		$html .= '<div id="drag-block-container">';
+		$html .= '<div class="drag-block-container block block-node" id="'. $module . $delta .'" drag-bid="'.$bid.'" drag-delta="'.$delta.'" drag-weight="'.$weight.'">'.$render_block.'</div>';
+		$html .= '</div>';
+		$commands[] = ajax_command_replace('#drag-block-container', $html);
+		//return the commands
+		$page = array('#type' => 'ajax', '#commands' => $commands);
+		ajax_deliver($page);
+		break;
+	default:
+		$output = t("This is some content delivered via a page load.");
+		return $output;
+		break;
+	}
+}
+
+
+
+//menu callback to update our blocks weight && settings
+function _drag_update_dragged_block($bid = NULL, $region = NULL, $weight = NULL){
+	$updated = array(
+		'updated' => FALSE,
+	);
+	if(!empty($bid) && !empty($region) && $region != 'undefined' && isset($weight)){
+		$update = new DragLayout();
+		$updated['updated'] = $update::updateBlockSettings($bid, $region, $weight);
+	}
+	drupal_json_output($updated);
+}
+
+
+
+/**
+ *
+ */
+function drag_page_alter(&$page){
+	//the layout class
+	$layout = new DragLayout();
+	//get the current default theme key
+	$theme_key = $layout->getThemeKey();
+	//check if the user has access
+	$has_access = user_access('drag_blocks', $account = NULL);
+	if($theme_key && $has_access){
+		//Add libraries
+		drupal_add_library('system', 'drupal.ajax');
+		drupal_add_library('system', 'jquery.form');
+		drupal_add_library('system', 'ui.draggable');
+		drupal_add_library('system', 'ui.droppable');
+		//get the regions for the defaul theme
+		$layout->getRegions();
+		//get the current blocks for them theme regions
+		$layout->getBlockRegionList();
+		//lquery all blocks for the current default theme
+		$layout->getBLockList(NULL, TRUE);
+		//the items list of blocks for the default theme
+		$items = $layout::formatBlockList($layout->blocks_list);
+		//give all the theme blocks on the page attributes
+		$layout->buildDefaultBlockSettings();
+
+
+		//add our css / js
+		drupal_add_js(array('drag' => array('blockSettings' => '')), 'setting');
+		drupal_add_css(drupal_get_path('module', 'drag') . '/css/drag.css', array('type' => 'file', 'weight' => -97, 'region' => 'footer'));
+		drupal_add_js(drupal_get_path('module', 'drag') . '/js/drag_block.js', array('type' => 'file', 'weight' => -96, 'region' => 'footer'));
+		drupal_add_js(drupal_get_path('module', 'drag') . '/js/drag_sidebar.js', array('type' => 'file', 'weight' => -95, 'region' => 'footer'));
+
+
+		//demonstrate regions
+		$visible_regions = $layout->regions;
+		foreach ($visible_regions as $delta => $region) {
+			$description = '<div class="drag-block-region">'. $region .'</div><div drag-region-id="'. $delta .'" class="region-delta"></div>';
+			$block_labels = array(
+				'#markup' => $description,
+				'#weight' => -1,
+			);
+			if(!empty($page[$delta])){
+				array_unshift($page[$delta], $block_labels);
+			}else{
+				$page[$delta]['description'] = $block_labels;
+			}
+		}
+
+		//our sidebar render array
+		$side_bar = array();
+		$side_bar['block_container'] = array(
+			'#type' => 'markup',
+			'#markup' => '',
+			'#prefix' => '<div id="drag-block-container">',
+			'#suffix' => '</div>',
+			'#weight' => -100,
+		);
+		//the sidebar wrapper
+		$side_bar['wrapper'] = array(
+			'#type' => 'container',
+			'#attributes' => array(
+				'id' => 'drag-module-sidebar-wrapper',
+			),
+		);
+		//the sidebar sub wrapper
+		$side_bar['wrapper']['sub_wrapper'] = array(
+			'#type' => 'container',
+			'#attributes' => array(
+				'id' => 'drag-sub-sidebar-wrapper',
+			),
+		);
+		$side_bar['wrapper']['sub_wrapper']['init_sidebar'] = array(
+			'#type' => 'markup',
+			'#markup' => '<span></span>',
+			'#prefix' => '<a href="#" class="drag-init-sidebar">',
+			'#suffix' => '</a>',
+			'#weight' => -99,
+		);
+		//add the items to our list
+		$side_bar['wrapper']['sub_wrapper']['sidebar'] = array(
+			'#title' => '<span class="drag-blocks-title drag-list-title">Blocks</span>',
+			'#theme' => 'item_list',
+			'#type' => 'ul',
+			'#items' => $items,
+			'#prefix' => '<div class="drag-module-list-wrapper">',
+			'#suffix' => '</div>',
+			'#attributes' => array(
+				'class' => array('drag-module-list'),
+			),
+			'#weight' => 100,
+		);
+		//put our sidebar in the page for rendering
+		$page['content']['drag_sidebar'] = $side_bar;
+	}
+}

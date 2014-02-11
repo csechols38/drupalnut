@@ -1,0 +1,44 @@
+#drag-module-sidebar-wrapper{
+	position: fixed;
+	top:100px;
+	left:0px;
+}
+
+.drag-module-list{
+	display:none;
+}
+
+.drag-list-active{
+	display:block;
+	visibility: visible;
+}
+
+
+.drag-block-region{
+	display:none;
+}
+
+.drag-block-region.active{
+	display:block;
+	
+}
+
+.region.block-drag-over{
+	border:2px dotted #333;
+}
+
+.ui-draggable-dragging{
+	background: #f3f3cd;
+	border: 1px dotted #9f9e00;
+	color: #000;
+	margin: 5px;
+	padding: 5px
+	text-shadow: none;
+}
+
+.drag-region-placeholder {
+  margin: 0 1em 1em 0;
+  height: 50px;
+  width:100%;
+  background: #f4f49f;
+}

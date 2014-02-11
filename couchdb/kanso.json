@@ -1,0 +1,9 @@
+{
+    "name": "couchdb",
+    "version": "0.0.1",
+    "description": "Testing with drupal",
+    "attachments": ["index.html"],
+    "dependencies": {
+        "attachments": null       
+    }
+}

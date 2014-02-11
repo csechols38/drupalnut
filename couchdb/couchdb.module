@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * @implements hook_menu();
+ */
+function couchdb_menu(){
+	$items = array();
+	//block menu item
+	$items['couchdb'] = array(
+		'page callback' => '_couch_db_view_block',
+		'page arguments' => array(),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	return $items;
+}
+
+
+
+function couchdb_block_info(){
+	 // This example comes from node.module.
+  $blocks['chouchdb'] = array(
+    'info' => t('ChouchDB'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  return $blocks;
+}
+
+
+
+
+function couchdb_block_view($delta = ''){
+	$blocks = array();
+	switch($delta){
+		case 'chouchdb':
+			$blocks['subject'] = t('Testing With Couchdb');
+			$blocks['content'] = t('This is testing with couchdb');
+		break;
+	}
+	return $blocks;
+}
+
+
+
+function _couch_db_view_block(){
+	print 'Hello WOrld!';
+}

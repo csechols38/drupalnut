@@ -1,0 +1,8 @@
+name = Drag
+description = My Drag Module
+core = 7.x
+package = custom
+files[] = drag.module
+files[] = drag_module_inc.php
+core = "7.x"
+

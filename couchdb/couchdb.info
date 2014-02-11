@@ -1,0 +1,6 @@
+name = Chouchdb
+description = Testing with couchdb
+core = 7.x
+package = custom
+core = "7.x"
+

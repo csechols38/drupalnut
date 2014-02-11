@@ -1,0 +1,7 @@
+name = Drupal7 Tweaks
+description = Tweaks for this Drupal7 Website
+core = 7.x
+package = custom
+files[] = drupal7_tweaks.module
+core = "7.x"
+

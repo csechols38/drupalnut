@@ -1,0 +1,70 @@
+<?php
+
+
+
+/**
+ * @implements hook_menu();
+ */
+function drupal7_tweaks_menu(){
+	$items = array();
+	//our autocomplete callback menu item
+	$items['ajax/decypher'] = array(
+		'page callback' => '_drupal7_tweaks_decypher_code',
+		'page arguments' => array(),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	return $items;
+}
+
+
+
+
+//function for extracting code while typing in the basic page node form
+function _drupal7_tweaks_decypher_code($code = ''){
+	$code = !empty($_POST['code']) ? rawurldecode($_POST['code']) : NULL;
+	$codes = '';
+	if(isset($code)){
+		$seperator = explode("\n", $code);
+		$start = FALSE;
+		foreach($seperator as $key => $value){
+			switch($value){
+				case '<pre class="brush:php">':
+					$start = TRUE;
+				break;
+				case '</pre>':
+					$start = FALSE;
+				break;
+			}
+			if(!$start){
+				$value = $value ."<br />";
+			}else{
+				$value = $value ."\r\n";
+			}
+			$codes .= $value;
+		}
+	}
+	drupal_json_output($codes);
+}
+
+
+
+function drupal7_tweaks_form_alter(&$form, &$form_state, $form_id){
+	switch($form_id){
+		case 'page_node_form':
+			drupal_add_js(drupal_get_path('module', 'drupal7_tweaks') . '/js/drupal7_node_preview.js', array());
+			drupal_add_css(drupal_get_path('module', 'drupal7_tweaks') . '/css/drupal7_tweaks.css', array());
+			drupal_add_js(drupal_get_path('module', 'syntaxhighlighter') . '/syntaxhighlighter.min.js', array());
+			$form['field_text_and_code']['und'][0]['#format'] = 'syntax_highlighter';
+			$form['title']['#weight'] = 1;
+			$form['field_tags']['#weight'] = 1;
+			$form['preview'] = array(
+				'#type' => 'markup',
+				'#markup' => '',
+				'#prefix' => '<div id="node-preview-syntax"">',
+				'#suffix' => '</div>',
+				'#weight' => 3,
+			);
+		break;
+	}
+}

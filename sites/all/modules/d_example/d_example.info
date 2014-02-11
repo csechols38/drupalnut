@@ -1,0 +1,6 @@
+name = Examples
+description = Module for implementing Drupal 7 Examples
+core = 7.x
+package = custom
+files[] = d_example.module
+core = "7.x"

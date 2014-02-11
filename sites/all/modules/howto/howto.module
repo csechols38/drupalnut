@@ -1,0 +1,365 @@
+<?php
+
+
+/**
+ * @implements hook_menu();
+ */
+function howto_menu(){
+	$items = array();
+	//our autocomplete callback menu item
+	$items['autocomplete/callback'] = array(
+		'page callback' => '_howto_autocomplete_callback',
+		'page arguments' => array(),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	//our custom menu item
+	$items['custom/menu/item/%'] = array(
+		'page callback' => '_howto_custom_menu_item',
+		'page arguments' => array(0, 1, 2, 3),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	$items['custom/ajax/%/%'] = array(
+		'page callback' => '_howto_ajax_tutorial_callback',
+		'page arguments' => array(2, 3),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	return $items;
+}
+
+
+function howto_vertical_tabs_form($tabs, &$form_state){
+	drupal_add_library('system', 'drupal.collapse');
+	$tabs = array();
+	//vertical tabs element
+	$tabs['vertical_tabs'] = array(
+		'#type' => 'vertical_tabs',
+	);
+	//vertical tabs fieldset
+	$tabs['tab_fieldset_1'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Example'),
+		'#collapsed' => TRUE,
+		'#collapsible' => TRUE,
+		'#group' => 'vertical_tabs',
+	);
+	//markup inside vertical tab fieldset
+	$tabs['tab_fieldset_1']['markup'] = array(
+		'#type' => 'markup',
+		'#markup' => '<div>This example shows you how to create vertical tab render arrays. You can create these anywhere!</div>',
+	);
+	//vertical tabs fieldset
+	$tabs['tab_fieldset_2'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Example 2'),
+		'#collapsed' => TRUE,
+		'#collapsible' => TRUE,
+		'#group' => 'vertical_tabs',
+	);
+	//markup inside vertical tab fieldset
+	$tabs['tab_fieldset_2']['markup'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Random Textfield'),
+	);
+	//return our render array for rendering
+	return $tabs;
+}
+
+
+
+
+/**
+ * @ our ajax callback function
+ *
+ */
+function _howto_ajax_tutorial_callback($ajax = 'ajax', $data){
+	$html = strip_tags(t('Text brought in with ' . $data));
+	//if the persons browser supports javascript
+	switch($ajax){
+	case 'ajax':
+		//ajax commands
+		//set the element id to replace
+		$commands[] = ajax_command_replace('#ajax-block', $html);
+		//return the ajax commands
+		$page = array('#type' => 'ajax', '#commands' => $commands);
+		//ajax_deliver
+		ajax_deliver($page);
+		break;
+	default:
+		$output = t("Sorry javascript is not enabled or your browser doesn't support it.");
+		return $output;
+		break;
+	}
+}
+
+
+
+/**
+ * @ $arg1 unkown
+ * @ $arg2 unkown
+ * @ $arg2 unkown
+ * @ $arg2 unkown
+ * @ our menu callback function
+ */
+function _howto_custom_menu_item($arg1 = NULL, $arg2 = NULL, $arg3 = NULL, $arg4 = NULL){
+	$content = array();
+	//our render array wrapper
+	$content['page'] = array(
+		'#type' => 'container',
+		'#attributes' => array(
+			'class' => array('page-container'),
+		),
+	);
+	//markup render array for our args
+	$content['page']['arg1'] = array(
+		'#type' => 'markup',
+		'#markup' => $arg1 .' '. $arg2 .' '. $arg3 .' '. strip_tags($arg4),
+	);
+
+	//return our renderable content
+	return render($content);
+}
+
+
+/**
+ * @ implements hook_block_info()
+ */
+function howto_block_info(){
+	$blocks = array();
+	// This example comes from node.module.
+	$blocks['auto_complete'] = array(
+		'info' => t('How To: Autocomplete'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+	// This example comes from node.module.
+	$blocks['ajax_example'] = array(
+		'info' => t('How To: Ajax Example No javascript'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+	// This example comes from node.module.
+	$blocks['vertical_tabs'] = array(
+		'info' => t('How To: Drupal Vertical Tabs'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+	$blocks['ajax_form'] = array(
+		'info' => t('How To: Ajax Form'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+	return $blocks;
+}
+
+
+/**
+ * @ implements hook_block_view()
+ */
+function howto_block_view($delta = ''){
+	//declare our block array
+	$blocks = array();
+	switch($delta){
+	case 'auto_complete':
+		//our blocks title
+		$blocks['subject'] = t('Autocomplete Example');
+		//our blocks content
+		//grab our custom form and render it inside the block
+		$blocks['content'] = drupal_get_form('howto_autocomplete_form');
+		break;
+	case 'ajax_example':
+		$blocks['subject'] = t('How To: Ajax Example No javascript');
+		//our blocks content
+		//grab our custom form and render it inside the block
+		$blocks['content'] = _howto_ajax_example_form_render_array();
+		break;
+	case 'vertical_tabs':
+		//our blocks title
+		$blocks['subject'] = t('Vertical Tabs Example');
+		//our blocks content
+		//grab our custom form and render it inside the block
+		$blocks['content'] = drupal_get_form('howto_vertical_tabs_form');
+		break;
+	case 'ajax_form':
+		//our blocks title
+		$blocks['subject'] = t('Ajax Form Example');
+		//our blocks content
+		//grab our custom form and render it inside the block
+		$blocks['content'] = drupal_get_form('howto_ajax_form');
+		break;
+	}
+	return $blocks;
+}
+
+
+/**
+ * @ implements hook_form()
+ */
+function howto_autocomplete_form($form, &$form_state){
+	//declare our form array
+	$form = array();
+	//our autocomplete form element
+	$form['autocomplete'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Autocomplete'),
+		'#description' => t("Selects from my How to's nodes."),
+		'#autocomplete_path' => 'autocomplete/callback',
+	);
+
+	return $form;
+}
+
+
+/**
+ * @ function creating a form like render array
+ */
+function _howto_ajax_example_form_render_array(){
+	drupal_add_library('system', 'drupal.ajax');
+	//declare our form array
+	$form = array();
+	$data = t('Ajax');
+	//our autocomplete form element
+	$form['ajax_link'] = array(
+		'#type' => 'markup',
+		'#markup' => l('Click Me For Ajax!', 'custom/ajax/nojs/'. $data, array('attributes' => array('class' => array('use-ajax')))),
+		'#description' => t("Selects from my How to's nodes."),
+		'#autocomplete_path' => 'autocomplete/callback',
+	);
+	$form['ajax_replace'] = array(
+		'#type' => 'markup',
+		'#markup' => t(''),
+		'#prefix' => '<div id="ajax-block">',
+		'#suffix' => '</div>',
+	);
+
+	return $form;
+}
+
+
+
+
+/**
+ * @ our autocomplete query function
+ */
+function _howto_autocomplete_callback($string){
+	$query = new EntityFieldQuery();
+	$query->entityCondition('entity_type', 'node')
+	->entityCondition('bundle', 'page')
+	->propertyCondition('title', '%'.$string.'%', 'like');
+	$result = $query->execute();
+	$options = array();
+	if (!empty($result['node'])) {
+		$nids = array_keys($result['node']);
+		$nodes =  entity_load('node', $nids);
+		foreach($nodes as $nid => $node){
+			$label = $node->title;
+			$entity_id = $node->nid;
+			$string = array('"'.$label.' ('.$entity_id.')"' => $label);
+			$key = "$label ($entity_id)";
+			// Labels containing commas or quotes must be wrapped in quotes.
+			if (strpos($key, ',') !== FALSE || strpos($key, '"') !== FALSE) {
+				$key = '"' . str_replace('"', '""', $key) . '"';
+			}
+			$options[$key] = $label;
+		}
+	}else{
+		$options[0] = 'No '. $string . ' created';
+	}
+	drupal_json_output($options);
+}
+
+
+
+
+
+/**
+ * @ implements hook_form()
+ */
+function howto_ajax_form($form, &$form_state){
+	//declare our form array
+	$form = array();
+	//our ajax select field
+	$form['ajax_select'] = array(
+		'#type' => 'select',
+		'#title' => t('Ajax Select Field'),
+		'#options' => array(
+			'one' => t('Ajax option one'),
+			'two' => t('Ajax option two'),
+		),
+		'#ajax' => _howto_ajax_form_settings('_howto_ajax_form_callback', 'ajax-field-replace'),
+	);
+	//our select list that will have its options altered dynamically
+	$form['normal_radios'] = array(
+		'#type' => 'radios',
+		'#title' => t('Radios With Dynamic Values'),
+		'#options' => array(
+			'only' => t('No Options'),
+		),
+		'#default_value' => 'only',
+		'#prefix' => '<div id="ajax-field-replace">',
+		'#suffix' => '</div>',
+		'#ajax' => _howto_ajax_form_settings('_howto_ajax_form_callback', 'markup-ajax-replace'),
+	);
+	//a random field we will bring in when normal_radios's ajax is triggered
+	$form['markup'] = array(
+		'#type' => 'hidden',
+		'#markup' => '',
+		'#prefix' => '<div id="markup-ajax-replace">',
+		'#suffix' => '</div>',
+	);
+	//we check to see if $form_state has values
+	//after you use the ajax, the form rebuilds
+	// and we can then alter fields and get values
+	if(!empty($form_state['values'])){
+		switch($form_state['triggering_element']['#name']){
+		case 'ajax_select':
+			//get the value selected from our ajax_select field
+			$trigger_option = $form_state['values']['ajax_select'];
+			//dynamic options
+			$options = array(
+				"$trigger_option" => t('You Selected Option ' . $trigger_option . 'Select this option for more ajax'),
+			);
+			//set the options
+			$form['normal_radios']['#options'] += $options;
+			//give our Radios a new title
+			$form['normal_radios']['#description'] = t('This field now has ajax. Give it a try!');
+			//set the defautl value
+			$form['normal_radios']['#default_value'] = $trigger_option;
+			break;
+		case 'normal_radios':
+			//show our hidden markup field
+			$form['markup']['#type'] = 'markup';
+			$form['markup']['#markup'] = t('Here is a Markup Field');
+			break;
+		}
+	}
+
+	return $form;
+}
+
+
+
+/**
+ * @ Helper function to set ajax settings on form elements
+ *   This function is only here so i dont have to duplicate the same code over and over in forms
+ */
+function _howto_ajax_form_settings($function, $wrapper, $effect = 'fade', $method = 'replace'){
+	return array(
+		'callback' => $function,
+		'wrapper' => $wrapper,
+		'effect' => $effect,
+		'method' => $method,
+	);
+}
+
+/**
+ * @ ajax form callback()
+ */
+function _howto_ajax_form_callback(&$form, &$form_state){
+	switch($form_state['triggering_element']['#name']){
+	case 'ajax_select':
+		return $form['normal_radios'];
+		break;
+	case 'normal_radios':
+		return $form['markup'];
+		break;
+	}
+}

@@ -1,0 +1,7 @@
+name = How To's
+description = Module for implementing How To Articles
+core = 7.x
+package = custom
+files[] = hwoto.module
+core = "7.x"
+
