@@ -2,10 +2,9 @@
 	width:50%;
 }
 
-#form-code-button{
-	float:left;
+#insert-code-button{
 	cursor: pointer;
-	padding: 4px 17px;
+	padding: 4px 12px;
 	margin-bottom: 1em;
 	margin-right: 1em;
 	color: #595959;
@@ -18,9 +17,15 @@
 	border-left-color: #d2d2d2;
 	border-right-color: #d2d2d2;
 	background: #d0d0d0;
-	-moz-border-radius: 20px;
-	-webkit-border-radius: 20px;
-	border-radius: 20px;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	border-radius: 8px;
+	text-decoration: none;
+	margin-left:8px;
+}
+
+.form-type-textarea label{
+	padding:8px;
 }
 
 

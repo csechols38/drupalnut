@@ -26,9 +26,19 @@
 			Drupal7Tweaks.decypherCode = function(code, element) {
 				$.post('/ajax/decypher', code, function(data) {
 					element.html(data);
+					console.log(data);
+					console.log(element);
 					SyntaxHighlighter.highlight();
 				});
 			}
+			
+			$('#insert-code-button', context).click(function(e){
+				e.preventDefault();
+				var textarea = $("#edit-field-text-and-code-und-0-value", context);
+				var current_text = textarea.val();
+				var code = '\n <pre class="brush:php"></pre>';
+				$("#edit-field-text-and-code-und-0-value", context).val(current_text + code);
+			});
 		}
 	};
 })(jQuery);

@@ -321,8 +321,6 @@ function howto_ajax_form($form, &$form_state){
 			$form['normal_radios']['#options'] += $options;
 			//give our Radios a new title
 			$form['normal_radios']['#description'] = t('This field now has ajax. Give it a try!');
-			//set the defautl value
-			$form['normal_radios']['#default_value'] = $trigger_option;
 			break;
 		case 'normal_radios':
 			//show our hidden markup field

@@ -56,15 +56,37 @@ function drupal7_tweaks_form_alter(&$form, &$form_state, $form_id){
 			drupal_add_css(drupal_get_path('module', 'drupal7_tweaks') . '/css/drupal7_tweaks.css', array());
 			drupal_add_js(drupal_get_path('module', 'syntaxhighlighter') . '/syntaxhighlighter.min.js', array());
 			$form['field_text_and_code']['und'][0]['#format'] = 'syntax_highlighter';
+			$form['field_text_and_code']['und'][0]['#title'] = $form['field_text_and_code']['und'][0]['#title'] . '<a href="#" id="insert-code-button">{  }</a>';
 			$form['title']['#weight'] = 1;
-			$form['field_tags']['#weight'] = 1;
+			$form['field_tags']['#weight'] = 3;
 			$form['preview'] = array(
 				'#type' => 'markup',
 				'#markup' => '',
-				'#prefix' => '<div id="node-preview-syntax"">',
+				'#prefix' => '<div id="node-preview-syntax">',
 				'#suffix' => '</div>',
-				'#weight' => 3,
+				'#weight' => 4,
 			);
+			//custom submit handler
+			$form['#submit'][] = '_drupal7_tweaks_page_form_submit';
+			
+		break;
+	}
+}
+
+
+
+
+/**
+ * @ function for making the node published or unpublished depending on what the user selects for field_page_type
+ *
+ */
+function _drupal7_tweaks_page_form_submit(&$form, &$form_state){
+	switch($form_state['values']['field_page_type']['und'][0]['value']){
+		case 'public':
+			$form_state['values']['status'] = 1;
+		break;
+		case 'private':
+			$form_state['values']['status'] = 0;
 		break;
 	}
 }
