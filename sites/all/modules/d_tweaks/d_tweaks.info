@@ -1,0 +1,7 @@
+name = DrupalNut Tweaks
+description = Tweaks for the DrupalNut Site
+core = 7.x
+package = custom
+files[] = d_tweaks.module
+core = "7.x"
+

@@ -5,11 +5,11 @@
 /**
  * @implements hook_menu();
  */
-function drupal7_tweaks_menu(){
+function d_tweaks_menu(){
 	$items = array();
 	//our autocomplete callback menu item
 	$items['ajax/decypher'] = array(
-		'page callback' => '_drupal7_tweaks_decypher_code',
+		'page callback' => '_d_tweaks_decypher_code',
 		'page arguments' => array(),
 		'access callback' => TRUE,
 		'type' => MENU_CALLBACK,
@@ -21,39 +21,25 @@ function drupal7_tweaks_menu(){
 
 
 //function for extracting code while typing in the basic page node form
-function _drupal7_tweaks_decypher_code($code = ''){
+function _d_tweaks_decypher_code($code = ''){
 	$code = !empty($_POST['code']) ? rawurldecode($_POST['code']) : NULL;
-	$codes = '';
+	$decypherd_text = '';
 	if(isset($code)){
-		$seperator = explode("\n", $code);
-		$start = FALSE;
-		foreach($seperator as $key => $value){
-			switch($value){
-				case '<pre class="brush:php">':
-					$start = TRUE;
-				break;
-				case '</pre>':
-					$start = FALSE;
-				break;
-			}
-			if(!$start){
-				$value = $value ."<br />";
-			}else{
-				$value = $value ."\r\n";
-			}
-			$codes .= $value;
-		}
+		$code = str_replace("<br />", "\n", $code);
+		$code_prefix = str_replace('{code}', '<pre class="brush:php">', $code);
+		$code_suffix = str_replace('{/code}', '</pre>', $code_prefix);
+		$decypherd_text = $code_suffix;
 	}
-	drupal_json_output($codes);
+	drupal_json_output($decypherd_text);
 }
 
 
 
-function drupal7_tweaks_form_alter(&$form, &$form_state, $form_id){
+function d_tweaks_form_alter(&$form, &$form_state, $form_id){
 	switch($form_id){
 		case 'page_node_form':
-			drupal_add_js(drupal_get_path('module', 'drupal7_tweaks') . '/js/drupal7_node_preview.js', array());
-			drupal_add_css(drupal_get_path('module', 'drupal7_tweaks') . '/css/drupal7_tweaks.css', array());
+			drupal_add_js(drupal_get_path('module', 'd_tweaks') . '/js/drupal7_node_preview.js', array());
+			drupal_add_css(drupal_get_path('module', 'd_tweaks') . '/css/d_tweaks.css', array());
 			drupal_add_js(drupal_get_path('module', 'syntaxhighlighter') . '/syntaxhighlighter.min.js', array());
 			$form['field_text_and_code']['und'][0]['#format'] = 'syntax_highlighter';
 			$form['field_text_and_code']['und'][0]['#title'] = $form['field_text_and_code']['und'][0]['#title'] . '<a href="#" id="insert-code-button">{  }</a>';
@@ -62,12 +48,12 @@ function drupal7_tweaks_form_alter(&$form, &$form_state, $form_id){
 			$form['preview'] = array(
 				'#type' => 'markup',
 				'#markup' => '',
-				'#prefix' => '<div id="node-preview-syntax">',
+				'#prefix' => '<div id="node-preview-syntax" title="Preview">',
 				'#suffix' => '</div>',
 				'#weight' => 4,
 			);
 			//custom submit handler
-			$form['#submit'][] = '_drupal7_tweaks_page_form_submit';
+			$form['#submit'][] = '_d_tweaks_page_form_submit';
 			
 		break;
 	}
@@ -80,7 +66,7 @@ function drupal7_tweaks_form_alter(&$form, &$form_state, $form_id){
  * @ function for making the node published or unpublished depending on what the user selects for field_page_type
  *
  */
-function _drupal7_tweaks_page_form_submit(&$form, &$form_state){
+function _d_tweaks_page_form_submit(&$form, &$form_state){
 	switch($form_state['values']['field_page_type']['und'][0]['value']){
 		case 'public':
 			$form_state['values']['status'] = 1;
@@ -89,4 +75,20 @@ function _drupal7_tweaks_page_form_submit(&$form, &$form_state){
 			$form_state['values']['status'] = 0;
 		break;
 	}
+	//convert our {code} place holde to <pre class="brush:php">
+	if(!empty($form_state['values']['field_text_and_code']['und'][0]['value'])){
+		$code = $form_state['values']['field_text_and_code']['und'][0]['value'];
+		$code_prefix = str_replace('{code}', '<pre class="brush:php">', $code);
+		$code_suffix = str_replace('{/code}', '</pre>', $code_prefix);
+		$form_state['values']['field_text_and_code']['und'][0]['value'] = $code_suffix;
+	}
+}
+
+
+
+/**
+ * @ implements hook_page_alter();
+ */
+function d_tweaks_page_alter(&$page){
+
 }
